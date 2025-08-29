@@ -1,0 +1,7 @@
+# folders to ignore
+data/
+IMERG/
+
+# files to ignore
+.dodsrc
+gen_token.py
