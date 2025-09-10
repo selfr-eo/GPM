@@ -22,11 +22,11 @@ for (( year=$start_year; year<=$end_year; year++ ))
 do
     # Print current timestamp and year
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Processing year: $year ..."
-    ./gpm.sh "$year" "$dir"
+    ./gpm_by_month.sh "$year" "$dir"
 
     # Check if gpm.sh executed successfully
     if [ $? -ne 0 ]; then
-        echo "Error: gpm.sh failed for year $year"
+        echo "Error: gpm_by_month.sh failed for year $year"
         exit 1
     fi
 done
