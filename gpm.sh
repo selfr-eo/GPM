@@ -86,15 +86,19 @@ download_file() {
   local url="https://gpm1.gesdisc.eosdis.nasa.gov/opendap/hyrax/GPM_L3/GPM_3IMERGHH.07/${yr}/${doy}/${file}.dap.nc4"
   
   # Use wget to download with Earthdata authentication
-  wget --load-cookies ~/.urs_cookies \
-       --save-cookies ~/.urs_cookies \
-       --keep-session-cookies \
-       --no-check-certificate \
-       --auth-no-challenge=on \
-       -O "$file_save" \
-       "$url" >> "$yr_$day.log" 2>&1
-
-  echo "$(date +'%Y-%m-%d %H:%M:%S') Downloading $file" | tee -a "$yr_$day.log"
+  if [[ ! -f "$file_save" ]]; then
+    wget --load-cookies ~/.urs_cookies \
+        --save-cookies ~/.urs_cookies \
+        --keep-session-cookies \
+        --no-check-certificate \
+        --auth-no-challenge=on \
+        -O "$file_save" \
+        "$url" >> "$yr_$day.log" 2>&1
+    
+    echo "$(date +'%Y-%m-%d %H:%M:%S') Downloading $file" | tee -a "$yr_$day.log"
+  # else
+    # echo "$(date +'%Y-%m-%d %H:%M:%S') File $file_save already exists. Skipping download." | tee -a "$yr_$day.log"
+  fi
 }
 
 # download_file() {
