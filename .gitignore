@@ -1,7 +1,10 @@
 # folders to ignore
 data/
 IMERG/
+IMERG_daily/
 
 # files to ignore
 .dodsrc
 gen_token.py
+test_wget.sh
+sandbox.sh
