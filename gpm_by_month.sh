@@ -69,14 +69,22 @@ download_file() {
   local url="https://gpm1.gesdisc.eosdis.nasa.gov/opendap/hyrax/GPM_L3/GPM_3IMERGDF.07/${yr}/${month}/${file_save}.dap.nc4"
   # Use wget to download with Earthdata authentication
   if [[ ! -f "$file_save" ]]; then
-    wget --load-cookies ~/.urs_cookies \
-        --save-cookies ~/.urs_cookies \
-        --keep-session-cookies \
-        --no-check-certificate \
-        --auth-no-challenge=on \
-        --netrc \
-        -O "$file_save" \
-        "$url" >> "$yr_$month_$day.log" 2>&1
+
+    curl -n \
+     -c ~/.urs_cookies \
+     -b ~/.urs_cookies \
+     -L \
+     -o "$file_save" \
+     "$url" >> "$yr_$month_$day.log" 2>&1
+
+    # wget --load-cookies ~/.urs_cookies \
+    #     --save-cookies ~/.urs_cookies \
+    #     --keep-session-cookies \
+    #     --no-check-certificate \
+    #     --auth-no-challenge=on \
+    #     --netrc \
+    #     -O "$file_save" \
+    #     "$url" >> "$yr_$month_$day.log" 2>&1
     
     echo "$(date +'%Y-%m-%d %H:%M:%S') Downloading $file" | tee -a "$yr_$month_$day.log"
 
@@ -130,7 +138,7 @@ for ((i=1; i<=$total_months; i++)); do
   fi
   
   echo "Downloading data for days in month $ii in $yr"
-  for ((j=0; j<$days_in_month; j++)); do
+  for ((j=1; j<=$days_in_month; j++)); do
     download_file "$ii" "$j" "V07B" #  month, day, version
   done
 done
