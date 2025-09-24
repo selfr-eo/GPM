@@ -36,6 +36,7 @@
 # The year to download:
 yr=$1
 directory=$2
+which_month=${3:-'ALL'}  # Default is ALL months, otherwise specify month as 01, 02, ..., 12
 
 # The URL, base directory
 url=https://gpm1.gesdisc.eosdis.nasa.gov/opendap/hyrax/GPM_L3/GPM_3IMERGDL.07
@@ -48,15 +49,17 @@ is_leap_year() {
               
 
 download_file() {
-  local month=$1          # Month (01-12)
+  local month=$1          # Month (1-12)
   local day=$2          # Day of month (1-31)
   local start_time="S000000"   # Start time string (e.g., S013000)
   local end_time="E235959"     # End time string (e.g., E015959)
   local version=$3      # Version string (e.g., V07B)
+  #echo "month is $month and day is $day"
 
   # Format day-of-year as 3-digit for folder
-  local doy=$(printf "%03d" $day)
-  month=$(printf "%02d" $month)
+  local doy=$(printf "%03d" "$day")
+  month_folder=$(printf "%02d" "$month")
+  #echo "month is $month_folder and day is $day and doy is $doy"
 
   # Construct date string for filename (mmdd)
   local mmdd=$(printf "%02d" $month)$(printf "%02d" $day)
@@ -66,7 +69,7 @@ download_file() {
   local file_save=${file}.nc4
   
   # Construct full URL (Daily Final data)
-  local url="https://gpm1.gesdisc.eosdis.nasa.gov/opendap/hyrax/GPM_L3/GPM_3IMERGDF.07/${yr}/${month}/${file_save}.dap.nc4"
+  local url="https://gpm1.gesdisc.eosdis.nasa.gov/opendap/hyrax/GPM_L3/GPM_3IMERGDF.07/${yr}/${month_folder}/${file_save}.dap.nc4"
   # Use wget to download with Earthdata authentication
   if [[ ! -f "$file_save" ]]; then
 
@@ -118,16 +121,37 @@ get_days_in_month() {
             ;;
     esac
 }
-      
-# Main loop to combine everything:
-for ((i=1; i<=$total_months; i++)); do
-  # change month from 1 to 01 to match url directory:
-  ii=$(printf "%02d" $i)
 
-  # get number of days in month
-  days_in_month=$(get_days_in_month $i $(is_leap_year "$yr" && echo "1" || echo "0"))
+# Only go through main loop if not a specific month:
+if [[ "$which_month" == "ALL" ]]; then
+  # Main loop to combine everything:
+  for ((i=1; i<=$total_months; i++)); do
+    # change month from 1 to 01 to match url directory:
+    ii=$(printf "%02d" $i)
 
-  # Check if the directory exists, create it if not, and then cd into it:
+    # get number of days in month
+    days_in_month=$(get_days_in_month $i $(is_leap_year "$yr" && echo "1" || echo "0"))
+
+    # Check if the directory exists, create it if not, and then cd into it:
+    monthpath="$directory/$yr/$ii"
+    if [ -d "$monthpath" ]; then
+      cd "$monthpath" || exit 1
+    else
+      echo "Directory $monthpath does not exist. Creating now..."
+      mkdir -p "$monthpath" || { echo "Failed to create directory $monthpath" >&2; exit 1; }
+      cd "$monthpath" || exit 1
+    fi
+    
+    echo "Downloading data for days in month $ii in $yr"
+    for ((j=1; j<=$days_in_month; j++)); do
+      download_file "$ii" "$j" "V07B" #  month, day, version
+    done
+  done
+else
+  # Just do the specified month:
+  ii=$(printf "%02d" $which_month)
+  days_in_month=$(get_days_in_month $which_month $(is_leap_year "$yr" && echo "1" || echo "0"))
+  echo "Days in month $ii is $days_in_month"
   monthpath="$directory/$yr/$ii"
   if [ -d "$monthpath" ]; then
     cd "$monthpath" || exit 1
@@ -136,12 +160,13 @@ for ((i=1; i<=$total_months; i++)); do
     mkdir -p "$monthpath" || { echo "Failed to create directory $monthpath" >&2; exit 1; }
     cd "$monthpath" || exit 1
   fi
-  
   echo "Downloading data for days in month $ii in $yr"
   for ((j=1; j<=$days_in_month; j++)); do
-    download_file "$ii" "$j" "V07B" #  month, day, version
+    download_file "$which_month" "$j" "V07B" #  month, day, version
   done
-done
+fi
+
+
 
 # wget options used:
 # --load-cookies ~/.urs_cookies: This option tells wget to load cookies from the file ~/.urs_cookies before beginning any download process. It's used when the server you are connecting to uses cookies for session management.
