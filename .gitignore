@@ -2,6 +2,7 @@
 data/
 IMERG/
 IMERG_daily/
+.vscode/
 
 # files to ignore
 .dodsrc
