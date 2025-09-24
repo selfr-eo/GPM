@@ -144,7 +144,7 @@ if [[ "$which_month" == "ALL" ]]; then
     
     echo "Downloading data for days in month $ii in $yr"
     for ((j=1; j<=$days_in_month; j++)); do
-      download_file "$ii" "$j" "V07B" #  month, day, version
+      download_file "$i" "$j" "V07B" #  month, day, version
     done
   done
 else
